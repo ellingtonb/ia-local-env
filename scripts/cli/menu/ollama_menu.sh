@@ -10,11 +10,14 @@ NC="\033[0m" # No Color
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Corrige o caminho para o arquivo recommended_models na raiz do projeto
 RECOMMENDED_MODELS=()
-if [ -f "$SCRIPT_DIR/recommended_models" ]; then
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+RECOMMENDED_MODELS_FILE="$PROJECT_ROOT/recommended_models"
+if [ -f "$RECOMMENDED_MODELS_FILE" ]; then
     while IFS= read -r line; do
         [ -n "$line" ] && RECOMMENDED_MODELS+=("$line")
-    done < "$SCRIPT_DIR/recommended_models"
+    done < "$RECOMMENDED_MODELS_FILE"
 fi
 
 # Função para obter status do Ollama
