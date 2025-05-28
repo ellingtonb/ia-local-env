@@ -50,12 +50,13 @@ open_webui_menu() {
             if [ "$ports_count" -eq 1 ]; then
                 port=$(echo "$ports_list" | cut -d',' -f1 | xargs)
                 browser_url="http://localhost:$port"
-                echo -e "URL: ${CYAN}$browser_url${NC}\n"
+                echo -e "URL: ${CYAN}$browser_url${NC}"
             elif [ "$ports_count" -gt 1 ]; then
-                echo -e "Ports: ${CYAN}$ports_list${NC}\n"
+                echo -e "Ports: ${CYAN}$ports_list${NC}"
             fi
+            echo -e "${CYAN}===========================${NC}\n"
         else
-            echo
+            echo -e "${CYAN}===========================${NC}\n"
         fi
 
         # Check if Docker is installed

@@ -15,12 +15,46 @@ MENU_DIR="$SCRIPT_DIR/scripts/cli/menu"
 # Cria diretórios de menu se não existirem
 mkdir -p "$MENU_DIR"
 
+# Função para obter status de um serviço
+get_service_status() {
+    local service_name="$1"
+    local status="Not Installed"
+    local color="$RED"
+    if [ "$service_name" = "Docker" ]; then
+        if ! command -v docker &> /dev/null; then
+            status="Not Installed"
+            color="$RED"
+        elif ! docker info &> /dev/null; then
+            status="Stopped"
+            color="$YELLOW"
+        else
+            status="Running"
+            color="$GREEN"
+        fi
+    elif [ "$service_name" = "Ollama" ]; then
+        if ! command -v ollama &> /dev/null; then
+            status="Not Installed"
+            color="$RED"
+        elif ! pgrep -x ollama &> /dev/null; then
+            status="Stopped"
+            color="$YELLOW"
+        else
+            status="Running"
+            color="$GREEN"
+        fi
+    fi
+    echo -e "${color}$status${NC}"
+}
+
 # Função para exibir cabeçalho
 show_header() {
     clear
     echo -e "${CYAN}============================="
     echo -e "    AI Local Environment    "
-    echo -e "=============================${NC}\n"
+    echo -e "=============================${NC}"
+    echo -e "Docker: $(get_service_status Docker)"
+    echo -e "Ollama: $(get_service_status Ollama)"
+    echo -e "${CYAN}=============================${NC}\n"
 }
 
 # Função para instalar Homebrew
