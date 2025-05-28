@@ -14,9 +14,41 @@ SCRIPT_DIR="$(pwd)"
 open_webui_menu() {
     while true; do
         clear
+        # Get container status
+        local container_id=""
+        local status="Not Started"
+        local status_color="$RED"
+        local exists=""
+        local port="3000" # default from docker-compose
+        local browser_url="http://localhost:$port"
+        # Get port from docker-compose.yml if possible
+        if [ -f "$SCRIPT_DIR/ui/docker-compose.yml" ]; then
+            port=$(grep -A 2 'open-webui:' "$SCRIPT_DIR/ui/docker-compose.yml" | grep 'ports:' -A 1 | grep -o '^[^:]*' | grep -Eo '[0-9]+' | head -1)
+            if [ -z "$port" ]; then
+                port="3000"
+            fi
+            browser_url="http://localhost:$port"
+        fi
+        container_id=$(docker-compose -f "$SCRIPT_DIR/ui/docker-compose.yml" ps -q open-webui | cut -c1-12)
+        exists="$container_id"
+        if [ -n "$container_id" ]; then
+            if docker ps -q | grep -q "$container_id"; then
+                status="Running"
+                status_color="$GREEN"
+            elif docker ps -aq | grep -q "$container_id"; then
+                status="Stopped"
+                status_color="$YELLOW"
+            fi
+        fi
         echo -e "${CYAN}==========================="
         echo -e "        Open-WebUI        "
-        echo -e "===========================${NC}\n"
+        echo -e "===========================${NC}"
+        echo -e "Status: ${status_color}$status${NC}"
+        if [ "$status" = "Running" ]; then
+            echo -e "URL: ${CYAN}$browser_url${NC}\n"
+        else
+            echo
+        fi
 
         # Check if Docker is installed
         if ! command -v docker &> /dev/null; then
@@ -58,25 +90,18 @@ open_webui_menu() {
         fi
 
         # Check Open-WebUI container status
-        local container_id=""
-        local status=0
-        local exists=""
-        if [ -f "$SCRIPT_DIR/ui/docker-compose.yml" ]; then
-            container_id=$(docker-compose -f "$SCRIPT_DIR/ui/docker-compose.yml" ps -q open-webui | cut -c1-12)
-            exists="$container_id"
-            if [ -n "$container_id" ]; then
-                # Check if the container is running
-                if docker ps -q | grep -q "$container_id"; then
-                    status=1
-                fi
-            elif docker ps -aq | grep -q "$container_id"; then
-                status=2
+        local status_code=0
+        if [ -n "$container_id" ]; then
+            if docker ps -q | grep -q "$container_id"; then
+                status_code=1
             fi
+        elif docker ps -aq | grep -q "$container_id"; then
+            status_code=2
         fi
 
-        if [[ "$status" == "1" ]]; then
+        if [[ "$status_code" == "1" ]]; then
             echo -e "1) Stop"
-        elif [[ "$status" == "2" ]]; then
+        elif [[ "$status_code" == "2" ]]; then
             echo -e "1) Start"
             echo -e "2) Remove"
         elif [[ -n "$exists" ]]; then
@@ -89,7 +114,7 @@ open_webui_menu() {
         read -p $'\nChoose an option: ' opt
         case $opt in
             1)
-                if [[ "$status" == "1" ]]; then
+                if [[ "$status_code" == "1" ]]; then
                     (cd "$SCRIPT_DIR/ui" && docker-compose stop open-webui)
                     echo -e "${YELLOW}Stopping Open-WebUI...${NC}"
                 else
@@ -99,7 +124,7 @@ open_webui_menu() {
                 sleep 2
                 ;;
             2)
-                if [[ "$status" == "2" ]]; then
+                if [[ "$status_code" == "2" ]]; then
                     (cd "$SCRIPT_DIR/ui" && docker-compose rm -f open-webui)
                     echo -e "${YELLOW}Removing stopped Open-WebUI container...${NC}"
                     sleep 2
