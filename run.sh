@@ -67,6 +67,11 @@ install_ollama() {
     bash "$MENU_DIR/install_ollama.sh"
 }
 
+# Função para submenu do Ollama
+ollama_menu() {
+    bash "$MENU_DIR/ollama_menu.sh"
+}
+
 # Open-WebUI submenu
 open_webui_menu() {
     bash "$MENU_DIR/open_webui_menu.sh"
@@ -102,12 +107,14 @@ main_menu() {
                     *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
                 esac
             else
-                echo -e "1) Open-WebUI"
+                echo -e "1) Ollama"
+                echo -e "2) Open-WebUI"
                 echo
                 echo -e "0) Exit"
                 read -p $'\nChoose an option: ' opt
                 case $opt in
-                    1) open_webui_menu ;;
+                    1) ollama_menu ;;
+                    2) open_webui_menu ;;
                     0) exit 0 ;;
                     *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
                 esac
