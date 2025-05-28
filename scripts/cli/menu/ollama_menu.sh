@@ -145,25 +145,25 @@ install_menu() {
     installed=()
     status=0
     while IFS= read -r line; do
-        # Garante que a linha não está vazia
         [ -n "$line" ] && installed+=("$line")
     done < <(list_installed_models)
     status=$?
     declare -A installed_map
     if [ $status -eq 0 ]; then
         for m in "${installed[@]}"; do
-            # Considera apenas o nome do modelo antes dos dois pontos e remove possíveis sufixos
             model_name="${m%%:*}"
             model_name="${model_name%%@*}"
             installed_map["$model_name"]=1
         done
     fi
     local available=()
-    # print all recomended models from RECOMMENDED_MODELS
+    local all_models=()
     for m in "${RECOMMENDED_MODELS[@]}"; do
         model_name="${m%%:*}"
-        if [ $status -ne 0 ] || [ -z "${installed_map[$model_name]}" ]; then
-            available+=("$m")
+        if [ $status -eq 0 ] && [ -n "${installed_map[$model_name]}" ]; then
+            all_models+=("$m|installed")
+        else
+            all_models+=("$m|not_installed")
         fi
     done
     while true; do
@@ -172,15 +172,12 @@ install_menu() {
         echo -e "${CYAN}====== Install Recommended Models ======${NC}"
         echo -e "${CYAN}========================================${NC}"
         echo
-
-        # Show error if no recommended models found
         if [ ${#RECOMMENDED_MODELS[@]} -eq 0 ]; then
             echo -e "${RED}No recommended models found! Please check the 'recommended_models' file.${NC}\n"
             echo -e "0) Back"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         fi
-
         if [ $status -eq 1 ]; then
             echo -e "${RED}Ollama is not installed.${NC}"
             echo -e "0) Back"
@@ -191,24 +188,33 @@ install_menu() {
             echo -e "0) Back"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
-        elif [ ${#available[@]} -eq 0 ] && [ ${#RECOMMENDED_MODELS[@]} -ne 0 ]; then
-            echo -e "${GREEN}All recommended models are already installed.${NC}"
-            echo
-            echo -e "0) Back"
-            read -p $'\nChoose an option: ' opt
-            [ "$opt" = "0" ] && return
         else
-            for i in "${!available[@]}"; do
-                echo "$((i+1))) ${available[$i]}"
+            for i in "${!all_models[@]}"; do
+                entry="${all_models[$i]}"
+                model_name="${entry%%|*}"
+                status_flag="${entry##*|}"
+                if [ "$status_flag" = "installed" ]; then
+                    echo -e "$((i+1))) ${GREEN}${model_name} (already installed)${NC}"
+                else
+                    echo -e "$((i+1))) $model_name"
+                fi
             done
             echo
             echo -e "0) Back"
             read -p $'\nChoose a model to install: ' opt
             if [ "$opt" = "0" ]; then
                 return
-            elif [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 1 ] && [ "$opt" -le ${#available[@]} ]; then
-                install_model "${available[$((opt-1))]}"
-                return
+            elif [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 1 ] && [ "$opt" -le ${#all_models[@]} ]; then
+                entry="${all_models[$((opt-1))]}"
+                model_name="${entry%%|*}"
+                status_flag="${entry##*|}"
+                if [ "$status_flag" = "installed" ]; then
+                    echo -e "${YELLOW}This model is already installed.${NC}"
+                    sleep 1
+                else
+                    install_model "$model_name"
+                    return
+                fi
             else
                 echo -e "${RED}Invalid Option!${NC}"; sleep 1
             fi
