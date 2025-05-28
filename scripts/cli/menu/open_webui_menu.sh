@@ -21,13 +21,15 @@ open_webui_menu() {
         local exists=""
         local port="3000" # default from docker-compose
         local browser_url="http://localhost:$port"
-        # Get port from docker-compose.yml if possible
+        # Get port(s) from docker-compose.yml if possible
+        ports_list=""
+        ports_count=0
         if [ -f "$SCRIPT_DIR/ui/docker-compose.yml" ]; then
-            port=$(grep -A 2 'open-webui:' "$SCRIPT_DIR/ui/docker-compose.yml" | grep 'ports:' -A 1 | grep -o '^[^:]*' | grep -Eo '[0-9]+' | head -1)
-            if [ -z "$port" ]; then
-                port="3000"
+            # Extrai todas as portas públicas (antes do ':') apenas da seção 'ports:'
+            ports_list=$(awk '/open-webui:/,0 {if ($1 == "ports:") p=1; else if (p && $1 == "-") print $2; else if (p && $1 != "-") exit}' "$SCRIPT_DIR/ui/docker-compose.yml" | awk -F: '{gsub(/\"/, "", $1); print $1}' | tr '\n' ',' | sed 's/,*$//;s/, /, /g')
+            if [ -n "$ports_list" ]; then
+                ports_count=$(echo "$ports_list" | awk -F',' '{print NF}')
             fi
-            browser_url="http://localhost:$port"
         fi
         container_id=$(docker-compose -f "$SCRIPT_DIR/ui/docker-compose.yml" ps -q open-webui | cut -c1-12)
         exists="$container_id"
@@ -45,7 +47,13 @@ open_webui_menu() {
         echo -e "===========================${NC}"
         echo -e "Status: ${status_color}$status${NC}"
         if [ "$status" = "Running" ]; then
-            echo -e "URL: ${CYAN}$browser_url${NC}\n"
+            if [ "$ports_count" -eq 1 ]; then
+                port=$(echo "$ports_list" | cut -d',' -f1 | xargs)
+                browser_url="http://localhost:$port"
+                echo -e "URL: ${CYAN}$browser_url${NC}\n"
+            elif [ "$ports_count" -gt 1 ]; then
+                echo -e "Ports: ${CYAN}$ports_list${NC}\n"
+            fi
         else
             echo
         fi
