@@ -81,6 +81,8 @@ models_menu() {
         echo -e "${CYAN}============ Models ============${NC}"
         echo -e "${CYAN}================================${NC}"
         echo
+        echo -e "${GREEN}1) Install${NC}"
+        echo
         echo -e "${YELLOW}Installed Models:${NC}"
         echo
         models=()
@@ -102,35 +104,21 @@ models_menu() {
             echo -e "0) Back"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
-        elif [ ${#models[@]} -eq 0 ]; then
-            echo
-            echo -e "${YELLOW}No models installed.${NC}"
-            echo
-            echo -e "${GREEN}1) Install${NC}"
-            echo
-            echo -e "0) Back"
-            read -p $'\nChoose an option: ' opt
-            case $opt in
-                1) install_menu ;;
-                0) return ;;
-                *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
-            esac
+        fi
+        for i in "${!models[@]}"; do
+            echo "$((i+2))) ${models[$i]}"
+        done
+        echo
+        echo -e "0) Back"
+        read -p $'\nChoose an option: ' opt
+        if [ "$opt" = "0" ]; then
+            return
+        elif [ "$opt" = "1" ]; then
+            install_menu
+        elif [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 2 ] && [ "$opt" -le $(( ${#models[@]} + 1 )) ]; then
+            model_actions_menu "${models[$((opt-2))]}"
         else
-            for i in "${!models[@]}"; do
-                echo "$((i+2))) ${models[$i]}"
-            done
-            echo
-            echo -e "0) Back"
-            read -p $'\nChoose an option: ' opt
-            if [ "$opt" = "0" ]; then
-                return
-            elif [ "$opt" = "1" ]; then
-                install_menu
-            elif [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 2 ] && [ "$opt" -le $(( ${#models[@]} + 1 )) ]; then
-                model_actions_menu "${models[$((opt-2))]}"
-            else
-                echo -e "${RED}Invalid Option!${NC}"; sleep 1
-            fi
+            echo -e "${RED}Invalid Option!${NC}"; sleep 1
         fi
     done
 }
