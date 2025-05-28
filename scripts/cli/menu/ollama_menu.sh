@@ -28,10 +28,13 @@ get_ollama_status() {
     fi
 }
 
-# Função para iniciar o Ollama
+# Função para iniciar o Ollama em background e manter rodando
 start_ollama() {
-    ollama serve &
-    sleep 2
+    if ! pgrep -x ollama &> /dev/null; then
+        nohup ollama serve > "$HOME/.ollama_server.log" 2>&1 &
+        disown
+        sleep 2
+    fi
 }
 
 # Função para parar o Ollama
@@ -45,10 +48,10 @@ list_installed_models() {
     if ! command -v ollama &> /dev/null; then
         return 1
     fi
-    if ! ollama list &> /dev/null; then
+    if ! ollama ps &> /dev/null; then
         return 2
     fi
-    ollama list | awk 'NR>1 {print $1":"$2}'
+    ollama ps | awk 'NR>1 {print $1":"$2}'
 }
 
 # Função para instalar modelo
@@ -187,6 +190,16 @@ install_menu() {
     done
 }
 
+# Submenu para visualizar o log do Ollama
+ollama_log_menu() {
+    clear
+    echo -e "${CYAN}=========== Ollama Log (Press Ctrl+C to exit) ===========${NC}"
+    echo
+    echo -e "Log File: $HOME/.ollama_server.log"
+    echo
+    tail -f "$HOME/.ollama_server.log"
+}
+
 # Menu principal do Ollama
 ollama_menu() {
     while true; do
@@ -214,25 +227,27 @@ ollama_menu() {
             "Stopped")
                 echo -e "1) Start"
                 echo -e "2) Models"
-                echo -e "0) Back"
-                read -p $'\nChoose an option: ' opt
+                echo -e "0) Voltar"
+                read -p $'\nEscolha uma opção: ' opt
                 case $opt in
                     1) start_ollama ;;
                     2) models_menu ;;
                     0) return ;;
-                    *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
+                    *) echo -e "${RED}Opção inválida!${NC}"; sleep 1 ;;
                 esac
                 ;;
             "Running")
                 echo -e "1) Stop"
                 echo -e "2) Models"
-                echo -e "0) Back"
-                read -p $'\nChoose an option: ' opt
+                echo -e "3) Log"
+                echo -e "0) Voltar"
+                read -p $'\nEscolha uma opção: ' opt
                 case $opt in
                     1) stop_ollama ;;
                     2) models_menu ;;
+                    3) ollama_log_menu ;;
                     0) return ;;
-                    *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
+                    *) echo -e "${RED}Opção inválida!${NC}"; sleep 1 ;;
                 esac
                 ;;
         esac
