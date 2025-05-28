@@ -85,7 +85,6 @@ models_menu() {
             echo -e "${RED}Ollama não está instalado.${NC}"
             echo
             echo -e "0) Back"
-            echo
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         elif [ $status -eq 2 ]; then
@@ -146,14 +145,27 @@ model_actions_menu() {
 
 # Submenu de instalação de modelos
 install_menu() {
-    mapfile -t installed < <(list_installed_models)
+    installed=()
+    status=0
+    while IFS= read -r line; do
+        # Garante que a linha não está vazia
+        [ -n "$line" ] && installed+=("$line")
+    done < <(list_installed_models)
+    status=$?
     declare -A installed_map
-    for m in "${installed[@]}"; do
-        installed_map["$m"]=1
-    done
+    if [ $status -eq 0 ]; then
+        for m in "${installed[@]}"; do
+            # Considera apenas o nome do modelo antes dos dois pontos e remove possíveis sufixos
+            model_name="${m%%:*}"
+            model_name="${model_name%%@*}"
+            installed_map["$model_name"]=1
+        done
+    fi
     local available=()
+    # print all recomended models from RECOMMENDED_MODELS
     for m in "${RECOMMENDED_MODELS[@]}"; do
-        if [ -z "${installed_map[$m]}" ]; then
+        model_name="${m%%:*}"
+        if [ $status -ne 0 ] || [ -z "${installed_map[$model_name]}" ]; then
             available+=("$m")
         fi
     done
@@ -163,11 +175,26 @@ install_menu() {
         echo -e "${CYAN}====== Install Recommended Models ======${NC}"
         echo -e "${CYAN}========================================${NC}"
         echo
-        if [ ${#available[@]} -eq 0 ]; then
+
+        # Show error if no recommended models found
+        if [ ${#RECOMMENDED_MODELS[@]} -eq 0 ]; then
+            echo -e "${RED}No recommended models found! Please check the 'recommended_models' file.${NC}\n"
+        fi
+
+        if [ $status -eq 1 ]; then
+            echo -e "${RED}Ollama is not installed.${NC}"
+            echo -e "0) Back"
+            read -p $'\nChoose an option: ' opt
+            [ "$opt" = "0" ] && return
+        elif [ $status -eq 2 ]; then
+            echo -e "${YELLOW}Ollama is not running or not responding.${NC}"
+            echo -e "0) Back"
+            read -p $'\nChoose an option: ' opt
+            [ "$opt" = "0" ] && return
+        elif [ ${#available[@]} -eq 0 ]; then
             echo -e "${GREEN}All recommended models are already installed.${NC}"
             echo
             echo -e "0) Back"
-            echo
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         else
@@ -176,7 +203,6 @@ install_menu() {
             done
             echo
             echo -e "0) Back"
-            echo
             read -p $'\nChoose a model to install: ' opt
             if [ "$opt" = "0" ]; then
                 return
@@ -217,6 +243,7 @@ ollama_menu() {
         echo -e "Status: ${color}${status}${NC}"
         echo -e "${CYAN}============================${NC}"
         echo
+
         case $status in
             "Not Installed")
                 echo -e "${RED}Ollama isn't installed!${NC}"
