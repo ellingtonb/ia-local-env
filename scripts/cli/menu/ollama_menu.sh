@@ -179,6 +179,9 @@ install_menu() {
         # Show error if no recommended models found
         if [ ${#RECOMMENDED_MODELS[@]} -eq 0 ]; then
             echo -e "${RED}No recommended models found! Please check the 'recommended_models' file.${NC}\n"
+            echo -e "0) Back"
+            read -p $'\nChoose an option: ' opt
+            [ "$opt" = "0" ] && return
         fi
 
         if [ $status -eq 1 ]; then
@@ -191,7 +194,7 @@ install_menu() {
             echo -e "0) Back"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
-        elif [ ${#available[@]} -eq 0 ]; then
+        elif [ ${#available[@]} -eq 0 ] && [ ${#RECOMMENDED_MODELS[@]} -ne 0 ]; then
             echo -e "${GREEN}All recommended models are already installed.${NC}"
             echo
             echo -e "0) Back"
