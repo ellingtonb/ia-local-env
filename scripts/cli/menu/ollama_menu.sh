@@ -51,24 +51,26 @@ list_installed_models() {
     if ! command -v ollama &> /dev/null; then
         return 1
     fi
-    if ! ollama ps &> /dev/null; then
+    if ! ollama list &> /dev/null; then
         return 2
     fi
-    ollama ps | awk 'NR>1 {print $1":"$2}'
+    ollama list | awk 'NR>1 {print $1":"$2}'
 }
 
 # Função para instalar modelo
 install_model() {
     local model="$1"
     ollama pull "$model"
-    read -n 1 -s -r -p "Press any key to return to menu..."
+    echo -e "\n${YELLOW}Press any key to return to menu...${NC}"
+    read -n 1 -s -r
 }
 
 # Função para remover modelo
 remove_model() {
     local model="$1"
     ollama rm "$model"
-    read -n 1 -s -r -p "Press any key to return to menu..."
+    echo -e "\n${YELLOW}Press any key to return to menu...${NC}"
+    read -n 1 -s -r
 }
 
 # Submenu de modelos
@@ -78,6 +80,9 @@ models_menu() {
         echo -e "${CYAN}================================${NC}"
         echo -e "${CYAN}============ Models ============${NC}"
         echo -e "${CYAN}================================${NC}"
+        echo
+        echo -e "${YELLOW}Installed Models:${NC}"
+        echo
         models=()
         while IFS= read -r line; do
             models+=("$line")
@@ -114,6 +119,7 @@ models_menu() {
             for i in "${!models[@]}"; do
                 echo "$((i+2))) ${models[$i]}"
             done
+            echo
             echo -e "0) Back"
             read -p $'\nChoose an option: ' opt
             if [ "$opt" = "0" ]; then
