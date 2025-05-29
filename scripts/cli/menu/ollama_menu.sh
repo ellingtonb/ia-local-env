@@ -143,29 +143,27 @@ model_actions_menu() {
 # Submenu de instalação de modelos
 install_menu() {
     installed=()
-    status=0
     while IFS= read -r line; do
-        [ -n "$line" ] && installed+=("$line")
+        model_name="${line%:*}"
+        [ -n "$line" ] && installed+=("$model_name")
     done < <(list_installed_models)
-    status=$?
-    declare -A installed_map
-    if [ $status -eq 0 ]; then
-        for m in "${installed[@]}"; do
-            model_name="${m%%:*}"
-            model_name="${model_name%%@*}"
-            installed_map["$model_name"]=1
-        done
-    fi
-    local available=()
+
     local all_models=()
-    for m in "${RECOMMENDED_MODELS[@]}"; do
-        model_name="${m%%:*}"
-        if [ $status -eq 0 ] && [ -n "${installed_map[$model_name]}" ]; then
-            all_models+=("$m|installed")
+    for recommended_model_name in "${RECOMMENDED_MODELS[@]}"; do
+        found=0
+        for inst in "${installed[@]}"; do
+          if [ "$inst" = "$recommended_model_name" ]; then
+              found=1
+              break
+          fi
+        done
+        if [ $found -eq 1 ]; then
+            all_models+=("$recommended_model_name|installed")
         else
-            all_models+=("$m|not_installed")
+            all_models+=("$recommended_model_name|not_installed")
         fi
     done
+
     while true; do
         clear
         echo -e "${CYAN}========================================${NC}"
@@ -213,7 +211,6 @@ install_menu() {
                     sleep 1
                 else
                     install_model "$model_name"
-                    return
                 fi
             else
                 echo -e "${RED}Invalid Option!${NC}"; sleep 1
