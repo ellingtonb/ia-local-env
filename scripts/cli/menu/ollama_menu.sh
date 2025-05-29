@@ -121,9 +121,9 @@ stop_model() {
 model_details() {
     local model="$1"
     clear
-    echo -e "${CYAN}Detalhes do modelo: $model${NC}\n"
-    ollama show "$model" 2>/dev/null || echo "Não foi possível obter detalhes."
-    echo -e "\n${YELLOW}Pressione qualquer tecla para voltar...${NC}"
+    echo -e "${CYAN}Model Details: $model${NC}\n"
+    ollama show "$model" 2>/dev/null || echo "Could not get details."
+    echo -e "\n${YELLOW}Press any key to return...${NC}"
     read -n 1 -s -r
 }
 
@@ -148,14 +148,14 @@ models_menu() {
             echo
             echo -e "${RED}Ollama não está instalado.${NC}"
             echo
-            echo -e "0) Back"
+            echo -e "${RED}0) Back${NC}"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         elif [ $status -eq 2 ]; then
             echo
             echo -e "${YELLOW}Ollama is not running or not responding.${NC}"
             echo
-            echo -e "0) Back"
+            echo -e "${RED}0) Back${NC}"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         fi
@@ -163,8 +163,8 @@ models_menu() {
             echo "$((i+2))) ${models[$i]}"
         done
         echo
-        echo -e "0) Back"
-        read -p $'\nChoose an option: ' opt
+        echo -e "${RED}0) Back${NC}"
+        read -p $'\nChoose an option or a model to see more options: ' opt
         if [ "$opt" = "0" ]; then
             return
         elif [ "$opt" = "1" ]; then
@@ -185,15 +185,15 @@ model_actions_menu() {
         clear
         echo -e "${CYAN}Model: $model_name${NC}\n"
         if is_model_running "$model_name"; then
-            echo -e "${YELLOW}1) Stop${NC}"
-            echo -e "${BLUE}2) Details${NC}"
-            echo -e "${RED}3) Remove${NC}"
+            echo -e "1) Stop"
+            echo -e "2) Details"
+            echo -e "3) Remove"
         else
-            echo -e "${GREEN}1) Start${NC}"
-            echo -e "${BLUE}2) Details${NC}"
-            echo -e "${RED}3) Remove${NC}"
+            echo -e "1) Start"
+            echo -e "2) Details"
+            echo -e "3) Remove"
         fi
-        echo -e "\n0) Back"
+        echo -e "\n${RED}0) Back${NC}"
         read -p $'\nChoose an option: ' opt
         if is_model_running "$model_name"; then
             case $opt in
@@ -271,23 +271,23 @@ install_menu() {
 
         if [ ${#RECOMMENDED_MODELS[@]} -eq 0 ]; then
             echo -e "${RED}No recommended models found! Please check the 'recommended_models' file.${NC}\n"
-            echo -e "0) Back"
+            echo -e "${RED}0) Back${NC}"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         fi
         if [ $status -eq 1 ]; then
             echo -e "${RED}Ollama is not installed.${NC}"
-            echo -e "0) Back"
+            echo -e "${RED}0) Back${NC}"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         elif [ $status -eq 2 ]; then
             echo -e "${YELLOW}Ollama is not running or not responding.${NC}"
-            echo -e "0) Back"
+            echo -e "${RED}0) Back${NC}"
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         else
             echo
-            echo -e "0) Back"
+            echo -e "${RED}0) Back${NC}"
             read -p $'\nChoose a model to install: ' opt
             if [ "$opt" = "0" ]; then
                 return
@@ -342,34 +342,34 @@ ollama_menu() {
         case $status in
             "Not Installed")
                 echo -e "${RED}Ollama isn't installed!${NC}"
-                echo -e "0) Back"
+                echo -e "${RED}0) Back${NC}"
                 read -p $'\nChoose an option: ' opt
                 [ "$opt" = "0" ] && return
                 ;;
             "Stopped")
                 echo -e "1) Start"
                 echo -e "2) Models"
-                echo -e "0) Voltar"
-                read -p $'\nEscolha uma opção: ' opt
+                echo -e "\n${RED}0) Back${NC}"
+                read -p $'\nChoose an option: ' opt
                 case $opt in
                     1) start_ollama ;;
                     2) models_menu ;;
                     0) return ;;
-                    *) echo -e "${RED}Opção inválida!${NC}"; sleep 1 ;;
+                    *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
                 esac
                 ;;
             "Running")
                 echo -e "1) Stop"
                 echo -e "2) Models"
                 echo -e "3) Log"
-                echo -e "0) Voltar"
-                read -p $'\nEscolha uma opção: ' opt
+                echo -e "\n${RED}0) Back${NC}"
+                read -p $'\nChoose an option: ' opt
                 case $opt in
                     1) stop_ollama ;;
                     2) models_menu ;;
                     3) ollama_log_menu ;;
                     0) return ;;
-                    *) echo -e "${RED}Opção inválida!${NC}"; sleep 1 ;;
+                    *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
                 esac
                 ;;
         esac

@@ -20,6 +20,7 @@ get_service_status() {
     local service_name="$1"
     local status="Not Installed"
     local color="$RED"
+    local extra=""
     if [ "$service_name" = "Docker" ]; then
         if ! command -v docker &> /dev/null; then
             status="Not Installed"
@@ -42,19 +43,54 @@ get_service_status() {
             status="Running"
             color="$GREEN"
         fi
+    elif [ "$service_name" = "Open-WebUI" ]; then
+        local container_id=""
+        local status_code=0
+        local port="3000"
+        local browser_url="http://localhost:$port"
+        local ports_list=""
+        local ports_count=0
+        if [ -f "$SCRIPT_DIR/ui/docker-compose.yml" ]; then
+            ports_list=$(awk '/open-webui:/,0 {if ($1 == "ports:") p=1; else if (p && $1 == "-") print $2; else if (p && $1 != "-") exit}' "$SCRIPT_DIR/ui/docker-compose.yml" | awk -F: '{gsub(/\"/, "", $1); print $1}' | tr '\n' ',' | sed 's/,*$//;s/, /, /g')
+            if [ -n "$ports_list" ]; then
+                ports_count=$(echo "$ports_list" | awk -F',' '{print NF}')
+            fi
+        fi
+        container_id=$(docker-compose -f "$SCRIPT_DIR/ui/docker-compose.yml" ps -q open-webui | cut -c1-12 2>/dev/null)
+        if [ -n "$container_id" ]; then
+            if docker ps -q | grep -q "$container_id"; then
+                status="Running"
+                color="$GREEN"
+                if [ "$ports_count" -eq 1 ]; then
+                    port=$(echo "$ports_list" | cut -d',' -f1 | xargs)
+                    browser_url="http://localhost:$port"
+                    extra=" ($browser_url)"
+                fi
+            elif docker ps -aq | grep -q "$container_id"; then
+                status="Stopped"
+                color="$YELLOW"
+            else
+                status="Stopped"
+                color="$YELLOW"
+            fi
+        else
+            status="Stopped"
+            color="$YELLOW"
+        fi
     fi
-    echo -e "${color}$status${NC}"
+    echo -e "${color}$status${NC}${extra}"
 }
 
 # Função para exibir cabeçalho
 show_header() {
     clear
-    echo -e "${CYAN}============================="
-    echo -e "    AI Local Environment    "
-    echo -e "=============================${NC}"
+    echo -e "${CYAN}============================================"
+    echo -e "           AI Local Environment    "
+    echo -e "============================================${NC}"
     echo -e "Docker: $(get_service_status Docker)"
     echo -e "Ollama: $(get_service_status Ollama)"
-    echo -e "${CYAN}=============================${NC}\n"
+    echo -e "Open-WebUI: $(get_service_status Open-WebUI)"
+    echo -e "${CYAN}============================================${NC}\n"
 }
 
 # Função para instalar Homebrew
@@ -87,7 +123,7 @@ main_menu() {
             echo -e "1) Install Homebrew"
             echo -e "2) Install Ollama ${RED}(requires Homebrew)${NC}"
             echo
-            echo -e "0) Exit"
+            echo -e "${RED}0) Exit${NC}"
             read -p $'\nChoose an option: ' opt
             case $opt in
                 1) install_homebrew ;;
@@ -99,7 +135,7 @@ main_menu() {
             if ! command -v ollama &> /dev/null; then
                 echo -e "1) Install Ollama"
                 echo
-                echo -e "0) Exit"
+                echo -e "${RED}0) Exit${NC}"
                 read -p $'\nChoose an option: ' opt
                 case $opt in
                     1) install_ollama ;;
@@ -110,7 +146,7 @@ main_menu() {
                 echo -e "1) Ollama"
                 echo -e "2) Open-WebUI"
                 echo
-                echo -e "0) Exit"
+                echo -e "${RED}0) Exit${NC}"
                 read -p $'\nChoose an option: ' opt
                 case $opt in
                     1) ollama_menu ;;
