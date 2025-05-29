@@ -96,6 +96,27 @@ remove_model() {
     read -n 1 -s -r
 }
 
+# Função para verificar se um modelo está rodando
+is_model_running() {
+    local model="$1"
+    ollama ps 2>/dev/null | awk '{print $1}' | grep -q "^$model$"
+}
+
+# Função para iniciar um modelo específico
+start_model() {
+    local model="$1"
+    nohup ollama run "$model" > "$HOME/.ollama_${model}_run.log" 2>&1 &
+    disown
+    sleep 2
+}
+
+# Função para parar um modelo específico
+stop_model() {
+    local model="$1"
+    ollama stop "$model"
+    sleep 2
+}
+
 # Submenu de modelos
 models_menu() {
     while true; do
@@ -149,17 +170,34 @@ models_menu() {
 # Submenu de ações para modelo
 model_actions_menu() {
     local model="$1"
+    local model_name="${model%:*}"
     while true; do
         clear
-        echo -e "${CYAN}Model: ${model%:*}${NC}\n"
-        echo -e "${RED}1) Remove${NC}"
+        echo -e "${CYAN}Model: $model_name${NC}\n"
+        if is_model_running "$model_name"; then
+            echo -e "${YELLOW}1) Stop${NC}"
+            echo -e "${RED}2) Remove${NC}"
+        else
+            echo -e "${GREEN}1) Start${NC}"
+            echo -e "${RED}2) Remove${NC}"
+        fi
         echo -e "\n0) Back"
         read -p $'\nChoose an option: ' opt
-        case $opt in
-            1) remove_model "$model"; return ;;
-            0) return ;;
-            *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
-        esac
+        if is_model_running "$model_name"; then
+            case $opt in
+                1) stop_model "$model_name";;
+                2) remove_model "$model"; return ;;
+                0) return ;;
+                *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
+            esac
+        else
+            case $opt in
+                1) start_model "$model_name";;
+                2) remove_model "$model"; return ;;
+                0) return ;;
+                *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
+            esac
+        fi
     done
 }
 
