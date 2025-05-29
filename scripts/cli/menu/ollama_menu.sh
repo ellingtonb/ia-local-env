@@ -20,6 +20,29 @@ if [ -f "$RECOMMENDED_MODELS_FILE" ]; then
     done < "$RECOMMENDED_MODELS_FILE"
 fi
 
+# Função para ler modelos recomendados por seção
+read_recommended_models() {
+    local section=""
+    CODE_MODELS=()
+    GENERAL_MODELS=()
+    if [ -f "$RECOMMENDED_MODELS_FILE" ]; then
+        while IFS= read -r line; do
+            [[ "$line" =~ ^#.*$ || -z "$line" ]] && continue
+            if [[ "$line" =~ ^\[.*\]$ ]]; then
+                section="${line//[\[\]]/}"
+                continue
+            fi
+            case "$section" in
+                code) CODE_MODELS+=("$line") ;;
+                general) GENERAL_MODELS+=("$line") ;;
+            esac
+        done < "$RECOMMENDED_MODELS_FILE"
+    fi
+}
+
+# Chame a função após definir o caminho do arquivo
+read_recommended_models
+
 # Função para obter status do Ollama
 get_ollama_status() {
     if ! command -v ollama &> /dev/null; then
@@ -128,9 +151,9 @@ model_actions_menu() {
     local model="$1"
     while true; do
         clear
-        echo -e "${CYAN}Model: $model${NC}"
-        echo -e "1) Remove"
-        echo -e "0) Back"
+        echo -e "${CYAN}Model: ${model%:*}${NC}\n"
+        echo -e "${RED}1) Remove${NC}"
+        echo -e "\n0) Back"
         read -p $'\nChoose an option: ' opt
         case $opt in
             1) remove_model "$model"; return ;;
@@ -170,6 +193,30 @@ install_menu() {
         echo -e "${CYAN}====== Install Recommended Models ======${NC}"
         echo -e "${CYAN}========================================${NC}"
         echo
+
+        echo -e "${BLUE}Code Models:${NC}"
+        for i in "${!CODE_MODELS[@]}"; do
+            model="${CODE_MODELS[$i]}"
+            if [[ " ${installed[*]} " == *" $model "* ]]; then
+                echo -e "$((i+1))) ${GREEN}${model} (already installed)${NC}"
+            else
+                echo -e "$((i+1))) $model"
+            fi
+        done
+
+        offset=${#CODE_MODELS[@]}
+        echo -e "\n${BLUE}General Models:${NC}"
+        for i in "${!GENERAL_MODELS[@]}"; do
+            model="${GENERAL_MODELS[$i]}"
+            idx=$((offset + i + 1))
+            if [[ " ${installed[*]} " == *" $model "* ]]; then
+                echo -e "$idx) ${GREEN}${model} (already installed)${NC}"
+            else
+                echo -e "$idx) $model"
+            fi
+        done
+        total=$(( ${#CODE_MODELS[@]} + ${#GENERAL_MODELS[@]} ))
+
         if [ ${#RECOMMENDED_MODELS[@]} -eq 0 ]; then
             echo -e "${RED}No recommended models found! Please check the 'recommended_models' file.${NC}\n"
             echo -e "0) Back"
@@ -187,30 +234,23 @@ install_menu() {
             read -p $'\nChoose an option: ' opt
             [ "$opt" = "0" ] && return
         else
-            for i in "${!all_models[@]}"; do
-                entry="${all_models[$i]}"
-                model_name="${entry%%|*}"
-                status_flag="${entry##*|}"
-                if [ "$status_flag" = "installed" ]; then
-                    echo -e "$((i+1))) ${GREEN}${model_name} (already installed)${NC}"
-                else
-                    echo -e "$((i+1))) $model_name"
-                fi
-            done
             echo
             echo -e "0) Back"
             read -p $'\nChoose a model to install: ' opt
             if [ "$opt" = "0" ]; then
                 return
-            elif [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 1 ] && [ "$opt" -le ${#all_models[@]} ]; then
-                entry="${all_models[$((opt-1))]}"
-                model_name="${entry%%|*}"
-                status_flag="${entry##*|}"
-                if [ "$status_flag" = "installed" ]; then
+            elif [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 1 ] && [ "$opt" -le $total ]; then
+                if [ "$opt" -le "${#CODE_MODELS[@]}" ]; then
+                    model="${CODE_MODELS[$((opt-1))]}"
+                else
+                    idx=$((opt-1-${#CODE_MODELS[@]}))
+                    model="${GENERAL_MODELS[$idx]}"
+                fi
+                if [[ " ${installed[*]} " == *" $model "* ]]; then
                     echo -e "${YELLOW}This model is already installed.${NC}"
                     sleep 1
                 else
-                    install_model "$model_name"
+                    install_model "$model"
                 fi
             else
                 echo -e "${RED}Invalid Option!${NC}"; sleep 1
