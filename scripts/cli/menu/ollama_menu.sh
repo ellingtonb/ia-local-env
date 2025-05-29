@@ -117,6 +117,16 @@ stop_model() {
     sleep 2
 }
 
+# Função para exibir detalhes do modelo
+model_details() {
+    local model="$1"
+    clear
+    echo -e "${CYAN}Detalhes do modelo: $model${NC}\n"
+    ollama show "$model" 2>/dev/null || echo "Não foi possível obter detalhes."
+    echo -e "\n${YELLOW}Pressione qualquer tecla para voltar...${NC}"
+    read -n 1 -s -r
+}
+
 # Submenu de modelos
 models_menu() {
     while true; do
@@ -176,24 +186,28 @@ model_actions_menu() {
         echo -e "${CYAN}Model: $model_name${NC}\n"
         if is_model_running "$model_name"; then
             echo -e "${YELLOW}1) Stop${NC}"
-            echo -e "${RED}2) Remove${NC}"
+            echo -e "${BLUE}2) Details${NC}"
+            echo -e "${RED}3) Remove${NC}"
         else
             echo -e "${GREEN}1) Start${NC}"
-            echo -e "${RED}2) Remove${NC}"
+            echo -e "${BLUE}2) Details${NC}"
+            echo -e "${RED}3) Remove${NC}"
         fi
         echo -e "\n0) Back"
         read -p $'\nChoose an option: ' opt
         if is_model_running "$model_name"; then
             case $opt in
                 1) stop_model "$model_name";;
-                2) remove_model "$model"; return ;;
+                2) model_details "$model_name";;
+                3) remove_model "$model"; return ;;
                 0) return ;;
                 *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
             esac
         else
             case $opt in
                 1) start_model "$model_name";;
-                2) remove_model "$model"; return ;;
+                2) model_details "$model_name";;
+                3) remove_model "$model"; return ;;
                 0) return ;;
                 *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
             esac
