@@ -273,7 +273,7 @@ install_menu() {
         for i in "${!CODE_MODELS[@]}"; do
             model="${CODE_MODELS[$i]}"
             if [[ " ${installed[*]} " == *" $model "* ]]; then
-                echo -e "$((i+1))) ${GREEN}${model} (already installed)${NC}"
+                echo -e "$((i+1))) ${GREEN}${model} (installed)${NC}"
             else
                 echo -e "$((i+1))) $model"
             fi
@@ -285,7 +285,7 @@ install_menu() {
             model="${GENERAL_MODELS[$i]}"
             idx=$((offset + i + 1))
             if [[ " ${installed[*]} " == *" $model "* ]]; then
-                echo -e "$idx) ${GREEN}${model} (already installed)${NC}"
+                echo -e "$idx) ${GREEN}${model} (installed)${NC}"
             else
                 echo -e "$idx) $model"
             fi
@@ -308,7 +308,7 @@ install_menu() {
                 model="${GENERAL_MODELS[$idx]}"
             fi
             if [[ " ${installed[*]} " == *" $model "* ]]; then
-                echo -e "${YELLOW}This model is already installed.${NC}"
+                echo -e "${YELLOW}This model is installed.${NC}"
                 sleep 1
             else
                 install_model "$model"
@@ -319,7 +319,7 @@ install_menu() {
             read custom_model
             if [ -n "$custom_model" ]; then
                 if [[ " ${installed[*]} " == *" $custom_model "* ]]; then
-                    echo -e "${YELLOW}This model is already installed.${NC}"
+                    echo -e "${YELLOW}This model is installed.${NC}"
                     sleep 1
                 else
                     install_model "$custom_model"
