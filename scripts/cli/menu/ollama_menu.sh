@@ -300,6 +300,7 @@ install_menu() {
                 sleep 1
             else
                 install_model "$model"
+                return  # Volta ao menu de Models após instalar
             fi
         elif [[ "$opt" =~ ^[Ii]$ ]]; then
             echo -ne "\n${YELLOW}Enter the model name to install: ${NC}"
@@ -310,6 +311,7 @@ install_menu() {
                     sleep 1
                 else
                     install_model "$custom_model"
+                    return  # Volta ao menu de Models após instalar
                 fi
             fi
         else
