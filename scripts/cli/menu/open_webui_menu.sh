@@ -64,8 +64,10 @@ open_webui_menu() {
             echo -e "${RED}Docker is required but not installed. Please install Docker to use Open-WebUI management.${NC}"
             echo
             echo -e "0) Back"
+            echo -e "M) Main Menu"
             read -p $'\nChoose an option: ' opt
             case $opt in
+                M) exit 0 ;;
                 0) break ;;
                 *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
             esac
@@ -77,9 +79,11 @@ open_webui_menu() {
             echo -e "${YELLOW}Docker is installed but not running. Please start Docker to use Open-WebUI management.${NC}"
             echo
             echo -e "0) Back"
+            echo -e "M) Main Menu"
             read -p $'\nChoose an option: ' opt
             case $opt in
                 0) break ;;
+                M) exit 0 ;;
                 *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
             esac
             continue
@@ -90,9 +94,11 @@ open_webui_menu() {
             echo -e "${YELLOW}Please create the 'ui' directory and add a docker-compose.yml file to use Open-WebUI management.${NC}"
             echo
             echo -e "0) Back"
+            echo -e "M) Main Menu"
             read -p $'\nChoose an option: ' opt
             case $opt in
                 0) break ;;
+                M) exit 0 ;;
                 *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
             esac
             continue
@@ -120,6 +126,7 @@ open_webui_menu() {
         fi
         echo
         echo -e "0) Back"
+        echo -e "M) Main Menu"
         read -p $'\nChoose an option: ' opt
         case $opt in
             1)
@@ -142,6 +149,7 @@ open_webui_menu() {
                 fi
                 ;;
             0) break ;;
+            M) exit 0 ;;
             *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
         esac
     done

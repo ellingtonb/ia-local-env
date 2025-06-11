@@ -178,9 +178,15 @@ models_menu() {
         done
         echo
         echo -e "${RED}0) Back${NC}"
+        echo -e "${RED}M) Main Menu${NC}"
         read -p $'\nChoose an option or a model to see more options: ' opt
+        if [[ "$opt" =~ ^[Ee]$ ]]; then
+            exit 0
+        fi
         if [ "$opt" = "0" ]; then
             return
+        elif [ "$opt" = "M" ]; then
+            exit 0
         elif [ "$opt" = "1" ]; then
             install_menu
         elif [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 2 ] && [ "$opt" -le $(( ${#models[@]} + 1 )) ]; then
@@ -208,6 +214,7 @@ model_actions_menu() {
             echo -e "3) Remove"
         fi
         echo -e "\n${RED}0) Back${NC}"
+        echo -e "${RED}M) Main Menu${NC}"
         read -p $'\nChoose an option: ' opt
         if is_model_running "$model_name"; then
             case $opt in
@@ -215,6 +222,7 @@ model_actions_menu() {
                 2) model_details "$model_name";;
                 3) remove_model "$model"; return ;;
                 0) return ;;
+                M) exit 0 ;;
                 *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
             esac
         else
@@ -223,6 +231,7 @@ model_actions_menu() {
                 2) model_details "$model_name";;
                 3) remove_model "$model"; return ;;
                 0) return ;;
+                M) exit 0 ;;
                 *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
             esac
         fi
@@ -285,9 +294,12 @@ install_menu() {
 
         echo -e "\n${YELLOW}I) Install by Name${NC}"
         echo -e "\n${RED}0) Back${NC}"
+        echo -e "${RED}M) Main Menu${NC}"
         read -p $'\nChoose a model to install or option: ' opt
         if [ "$opt" = "0" ];then
             return
+        elif [ "$opt" = "M" ];then
+            exit 0
         elif [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 1 ] && [ "$opt" -le $total ]; then
             if [ "$opt" -le "${#CODE_MODELS[@]}" ]; then
                 model="${CODE_MODELS[$((opt-1))]}"
@@ -314,6 +326,8 @@ install_menu() {
                     return  # Volta ao menu de Models após instalar
                 fi
             fi
+        elif [[ "$opt" =~ ^[Ee]$ ]]; then
+            exit 0
         else
             echo -e "${RED}Invalid Option!${NC}"; sleep 1
         fi
@@ -352,18 +366,27 @@ ollama_menu() {
             "Not Installed")
                 echo -e "${RED}Ollama isn't installed!${NC}"
                 echo -e "${RED}0) Back${NC}"
+                echo -e "${RED}M) Main Menu${NC}"
                 read -p $'\nChoose an option: ' opt
+                if [[ "$opt" =~ ^[Ee]$ ]]; then
+                    exit 0
+                fi
                 [ "$opt" = "0" ] && return
                 ;;
             "Stopped")
                 echo -e "1) Start"
                 echo -e "2) Models"
                 echo -e "\n${RED}0) Back${NC}"
+                echo -e "${RED}M) Main Menu${NC}"
                 read -p $'\nChoose an option: ' opt
+                if [[ "$opt" =~ ^[Ee]$ ]]; then
+                    exit 0
+                fi
                 case $opt in
                     1) start_ollama ;;
                     2) models_menu ;;
                     0) return ;;
+                    M) exit ;;
                     *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
                 esac
                 ;;
@@ -372,12 +395,17 @@ ollama_menu() {
                 echo -e "2) Models"
                 echo -e "3) Log"
                 echo -e "\n${RED}0) Back${NC}"
+                echo -e "${RED}M) Main Menu${NC}"
                 read -p $'\nChoose an option: ' opt
+                if [[ "$opt" =~ ^[Ee]$ ]]; then
+                    exit 0
+                fi
                 case $opt in
                     1) stop_ollama ;;
                     2) models_menu ;;
                     3) ollama_log_menu ;;
                     0) return ;;
+                    M) exit 0 ;;
                     *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
                 esac
                 ;;

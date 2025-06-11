@@ -123,35 +123,35 @@ main_menu() {
             echo -e "1) Install Homebrew"
             echo -e "2) Install Ollama ${RED}(requires Homebrew)${NC}"
             echo
-            echo -e "${RED}0) Exit${NC}"
+            echo -e "${RED}E) Exit${NC}"
             read -p $'\nChoose an option: ' opt
             case $opt in
                 1) install_homebrew ;;
                 2) echo -e "${RED}You need to install Homebrew first!${NC}"; echo; read -n 1 -s -r -p "Press any key to return to the menu..." ;;
-                0) exit 0 ;;
+                E) exit 0 ;;
                 *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
             esac
         else
             if ! command -v ollama &> /dev/null; then
                 echo -e "1) Install Ollama"
                 echo
-                echo -e "${RED}0) Exit${NC}"
+                echo -e "${RED}E) Exit${NC}"
                 read -p $'\nChoose an option: ' opt
                 case $opt in
                     1) install_ollama ;;
-                    0) exit 0 ;;
+                    E) exit 0 ;;
                     *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
                 esac
             else
                 echo -e "1) Ollama"
                 echo -e "2) Open-WebUI"
                 echo
-                echo -e "${RED}0) Exit${NC}"
+                echo -e "${RED}E) Exit${NC}"
                 read -p $'\nChoose an option: ' opt
                 case $opt in
                     1) ollama_menu ;;
                     2) open_webui_menu ;;
-                    0) exit 0 ;;
+                    E) exit 0 ;;
                     *) echo -e "${RED}Invalid option!${NC}"; sleep 1 ;;
                 esac
             fi
