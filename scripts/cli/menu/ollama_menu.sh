@@ -160,7 +160,21 @@ models_menu() {
             [ "$opt" = "0" ] && return
         fi
         for i in "${!models[@]}"; do
-            echo "$((i+2))) ${models[$i]}"
+            # Extrai apenas o nome do modelo (sem o ID)
+            model_full="${models[$i]}"
+            model_name="${model_full%%:*}:*"
+            # Remove o ID se houver (fica apenas nome:versao)
+            model_name_only="${model_full%%:*:*}"
+            if [[ "$model_full" =~ ^([^:]+:[^:]+): ]]; then
+                model_name_only="${BASH_REMATCH[1]}"
+            fi
+            if is_model_running "$model_name_only"; then
+                # Linha verde e com (Running)
+                echo -e "${GREEN}$((i+2))) $model_name_only (Running)${NC}"
+            else
+                # Apenas nome:versao, sem ID
+                echo -e "$((i+2))) $model_name_only"
+            fi
         done
         echo
         echo -e "${RED}0) Back${NC}"
