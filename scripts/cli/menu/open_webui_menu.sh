@@ -131,10 +131,10 @@ open_webui_menu() {
         case $opt in
             1)
                 if [[ "$status_code" == "1" ]]; then
-                    (cd "$SCRIPT_DIR/ui" && docker-compose stop open-webui)
+                    (cd "$SCRIPT_DIR/ui" && docker-compose down open-webui)
                     echo -e "${YELLOW}Stopping Open-WebUI...${NC}"
                 else
-                    (cd "$SCRIPT_DIR/ui" && docker-compose up -d open-webui)
+                    (cd "$SCRIPT_DIR/ui" && docker-compose up --build --force-recreate -d open-webui)
                     echo -e "${GREEN}Starting Open-WebUI...${NC}"
                 fi
                 sleep 2
