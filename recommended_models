@@ -13,3 +13,4 @@ JetBrains/Mellum-4b-sft-python:latest
 deepseek-r1:7b
 qwen3:8b
 gemma3:4b
+gpt-oss:20b

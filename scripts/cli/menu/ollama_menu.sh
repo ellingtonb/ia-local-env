@@ -220,7 +220,7 @@ model_actions_menu() {
             case $opt in
                 1) stop_model "$model_name";;
                 2) model_details "$model_name";;
-                3) remove_model "$model"; return ;;
+                3) remove_model "$model_name"; return ;;
                 0) return ;;
                 M) exit 0 ;;
                 *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
@@ -229,7 +229,7 @@ model_actions_menu() {
             case $opt in
                 1) start_model "$model_name";;
                 2) model_details "$model_name";;
-                3) remove_model "$model"; return ;;
+                3) remove_model "$model_name"; return ;;
                 0) return ;;
                 M) exit 0 ;;
                 *) echo -e "${RED}Invalid Option!${NC}"; sleep 1 ;;
