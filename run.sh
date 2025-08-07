@@ -81,12 +81,48 @@ get_service_status() {
     echo -e "${color}$status${NC}${extra}"
 }
 
+# Função para obter informações do sistema (compatível com Linux e macOS)
+get_system_info() {
+    local cpu_model=""
+    local cpu_cores=""
+    local memory=""
+    local os_name=""
+
+    # Detectar sistema operacional
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        os_name="macOS"
+        cpu_model=$(sysctl -n machdep.cpu.brand_string 2>/dev/null || echo "Unknown")
+        cpu_cores=$(sysctl -n hw.ncpu 2>/dev/null || echo "Unknown")
+        memory=$(sysctl -n hw.memsize 2>/dev/null | awk '{printf "%.1f GB", $1/1024/1024/1024}' || echo "Unknown")
+    else
+        # Linux
+        os_name="Linux"
+        cpu_model=$(grep -m1 "model name" /proc/cpuinfo | cut -d':' -f2 | sed 's/^ *//' | cut -c1-40 2>/dev/null || echo "Unknown")
+        cpu_cores=$(nproc 2>/dev/null || grep -c ^processor /proc/cpuinfo 2>/dev/null || echo "Unknown")
+        memory=$(free -h 2>/dev/null | awk '/^Mem:/ {print $2}' || echo "Unknown")
+    fi
+
+    echo "CPU: $cpu_model"
+    echo "Cores: $cpu_cores | RAM: $memory | OS: $os_name"
+}
+
 # Função para exibir cabeçalho
 show_header() {
     clear
     echo -e "${CYAN}============================================"
     echo -e "           AI Local Environment    "
     echo -e "============================================${NC}"
+
+    # Exibir informações do sistema
+    local system_info=$(get_system_info)
+    local cpu_info=$(echo "$system_info" | head -1)
+    local specs_info=$(echo "$system_info" | tail -1)
+
+    echo -e "${BLUE}$cpu_info${NC}"
+    echo -e "${BLUE}$specs_info${NC}"
+    echo -e "${CYAN}============================================${NC}"
+
     echo -e "Docker: $(get_service_status Docker)"
     echo -e "Ollama: $(get_service_status Ollama)"
     echo -e "Open-WebUI: $(get_service_status Open-WebUI)"
